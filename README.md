@@ -1,115 +1,139 @@
-# Sr SRE Coding Exercise - OpenTelemetry JavaScript Integration
+## Setup and Running Instructions
 
-## Overview
+### Prerequisites
+- Node.js version: 25.9.0
+- npm version: 11.12.1
 
-Welcome to our Sr SRE coding exercise! This exercise is designed to evaluate your skills in building observable applications using OpenTelemetry with JavaScript, both in the browser and server environments.
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/jgalasso97/observable-text-input.git
+cd observable-text-input
 
-You'll be creating a full-stack application that demonstrates your understanding of:
-- Modern JavaScript development (client and server)
-- OpenTelemetry instrumentation and observability
-- API design and implementation
-- Code organization and documentation
+# Install dependencies
+npm install
+```
 
-**Time Expectation:** 2-4 hours
+### Running the Application
+```bash
+# Start the application
+npm start
 
-## Exercise Requirements
+# Access the application at:
+# http://localhost:[5173]
+```
 
-### Functional Requirements
+### Testing OpenTelemetry Output
+To verify OpenTelemtry Output we will need to check both the browser developer tools and server console.
 
-#### User Interface
-- Create a web UI containing:
-  - A form with a single text input field
-  - A submit button
-  - Clear instructions prompting the user to enter text of their choosing and submit the form
-  - Display areas to show results from API calls
+1. Access the application in the browser at http://localhost:[5173] and open developer tools. Then enter text into the text box and click "Submit". You will see two JSON Objects printed to the console (one for each API request). Each object represents one OpenTelemetry span. The object also includes a traceId which can be used to follow the request in the backend server.
 
-#### Client-Side Behavior
-- On form submission, the UI must make **two concurrent asynchronous calls** to the server endpoints
-- Pass the entered text as input to both endpoints
-- Display the results from both API calls clearly to the user
-- Handle loading states and potential errors gracefully
+2. Open the terminal/console where the server is running. Similar to the client, you will see spans being logged out to the console. You should be able to find spans that include the API request information such as "'http.route': '/num_vowels'" and "'http.route': '/length'"
 
-#### Server-Side Implementation
-Implement a Node.js server with two REST API endpoints:
+3. To confirm that the tracing is working properly you can check that the traceID for the /length request and /num_vowels request matches for both the client (step 1) and the server (step 2).
 
-1. **`GET /length`** (or `POST /length`)
-   - Accepts text input as a parameter/body
-   - Returns the character length of the input text
-   - Response format: `{ "length": number }`
+## Developer's Choice Enhancement
 
-2. **`GET /num_vowels`** (or `POST /num_vowels`)
-   - Accepts text input as a parameter/body
-   - Returns the count of vowels (a, e, i, o, u - case insensitive) in the input text
-   - Response format: `{ "vowel_count": number }`
+### Enhancement: Rate Limiter
 
-### Non-Functional Requirements
+**Description:** Added an API rate limiter to the server using express-rate-limit.
 
-#### Repository & Setup
-- Submit your solution as a Git repository
-- Include clear setup and run instructions in the template found in RUNNING.md
-- Application must be easy to build and run locally from a clean repository clone
-- Include any necessary dependencies in `package.json`
-- Provide a single command to start both client and server (or clear instructions for separate processes)
-- Do not use any existing Vanguard libraries or exemplars!
+**Rationale:** To keep the focus on reliability, I chose to implement a rate limiter. Rate limiting protects backend services from traffic spikes or malicious actors by ensuring no single user can monopolize backend resources which is critical to maintain system availability.
 
-#### OpenTelemetry Integration
-- **Server-side**: Implement OpenTelemetry auto-instrumentation
-  - Instrument HTTP requests, responses, and any other relevant operations
-  - Configure trace exporters (console exporter is acceptable for this exercise)
-  - Ensure spans are created for each endpoint call
+**Implementation Notes:** The implementation uses express-rate-limit to provide a quick and simple rate limiting solution. THe rate limiting is configured to limit each IP to 20 requests every minute (chose to easily test locally). The rate per IP is stored in memory but can also be configured to be stored externally such as in a db or redis. 
 
-- **Client-side**: Implement OpenTelemetry auto-instrumentation
-  - Instrument fetch/XHR requests to the server
-  - Configure trace exporters (console exporter is acceptable for this exercise)
-  - Ensure client-side spans correlate with server-side spans when possible (trace IDs in client should correspond to trace IDs on server)
+## Technology Stack
 
-### Developer's Choice Enhancement
+*Document the technologies you chose to use:*
+- Client-side: Vite + React
+- Server-side: Express
+- OpenTelemetry: auto-instrumentations-node, auto-instrumentations-web, instrumentation-fetch, sdk-node, sdk-trace-web, sdk-trace-base
 
-Implement **one** additional feature or enhancement of your choosing. This is an opportunity to showcase your creativity and technical decision-making. Some examples include:
+## API Documentation
 
-**Feature Examples:**
-- Additional text analysis endpoints
-- Input validation and sanitization
-- Rate limiting or caching mechanisms
-- Text analysis history/persistence
+### Endpoints
 
-**Implementation Enhancement Examples:**
-- Performance optimizations (memoization, etc.)
-- Error handling/retry logic
-- Custom OpenTelemetry instrumentation
 
-**Requirements for your enhancement:**
-- Document your chosen enhancement in the "Developer's Choice" section in RUNNING.md
-- Explain why you chose this particular enhancement
-- Describe how it adds value to the application
+### **1. Get String Length**
+Calculates and returns the total number of characters in a provided text string.
 
-## Submission Guidelines
+* **URL:** `/length`
+* **Method:** `POST`
+* **Content-Type:** `application/json`
 
-1. **Code Repository:** Ensure your Git repository is complete and includes all necessary files
-2. **RUNNING.md Updates:** Use the template in RUNNING.md to provide usage instructions, document your technology choices, etc
+#### **Request Body**
+Accepts a JSON object containing the text.
 
-## Evaluation Criteria
+| Key | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `text` | `string` | Yes | The string you want to find the length of. |
 
-Your submission will be evaluated on:
+**Example Request:**
+```json
+{
+  "text": "Hello, world!"
+}
+```
 
-### Technical Implementation (60%)
-- Correct implementation of functional requirements
-- OpenTelemetry integration and configuration
-- Usage of resiliency techniques where applicable
+#### **Responses**
 
-### Enhancement & Problem-Solving (20%)
-- Creativity and technical merit of chosen enhancement
-- Quality of implementation
-- Clear explanation of choices and rationale
+**Success Response (200 OK)**
+Returns the length of the string as a number.
 
-### Developer Experience (20%)
-- Clear and accurate setup/run instructions
-- Repository organization and documentation
-- Ease of building and running the application
-- Code readability and maintainability
+```json
+{
+  "length": 13
+}
+```
 
-## Questions?
+**Error Response (400 Bad Request)**
+Returned if the `text` field is missing or is not a valid string.
 
-If you have questions about the requirements or need clarification on any aspect of the exercise, contact benjamin_schmaus@vanguard.com via email or Teams.
+```json
+{
+  "error": "Please provide a valid "text" string in the JSON body."
+}
+```
 
-Good luck, and we look forward to reviewing your solution!
+---
+
+### **2. Count Vowels**
+Calculates and returns the total count of vowels in a text string.
+
+* **URL:** `/num_vowels`
+* **Method:** `POST`
+* **Content-Type:** `application/json`
+
+#### **Request Body**
+Accepts a JSON object containing the text.
+
+| Key | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `text` | `string` | Yes | The string you want to count the vowels of. |
+
+**Example Request:**
+```json
+{
+  "text": "example string here"
+}
+```
+
+#### **Responses**
+
+**Success Response (200 OK)**
+Returns the total count of vowels found in the string.
+
+```json
+{
+  "vowel_count": 6
+}
+```
+
+**Error Response (400 Bad Request)**
+Returned if the `text` field is missing or is not a valid string.
+
+```json
+{
+  "error": "Please provide a valid "text" string in the JSON body."
+}
+```

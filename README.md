@@ -40,11 +40,10 @@ To verify OpenTelemtry Output we will need to check both the browser developer t
 
 **Rationale:** To keep the focus on reliability, I chose to implement a rate limiter. Rate limiting protects backend services from traffic spikes or malicious actors by ensuring no single user can monopolize backend resources which is critical to maintain system availability.
 
-**Implementation Notes:** The implementation uses express-rate-limit to provide a quick and simple rate limiting solution. THe rate limiting is configured to limit each IP to 20 requests every minute (chose to easily test locally). The rate per IP is stored in memory but can also be configured to be stored externally such as in a db or redis. 
+**Implementation Notes:** The implementation uses express-rate-limit to provide a quick and simple rate limiting solution. The rate limiting is configured to limit each IP to 20 requests every minute (chose to easily test locally). The rate per IP is stored in memory but can also be configured to be stored externally such as in a db or redis. 
 
 ## Technology Stack
 
-*Document the technologies you chose to use:*
 - Client-side: Vite + React
 - Server-side: Express
 - OpenTelemetry: auto-instrumentations-node, auto-instrumentations-web, instrumentation-fetch, sdk-node, sdk-trace-web, sdk-trace-base

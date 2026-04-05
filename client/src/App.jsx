@@ -42,17 +42,25 @@ function App() {
       }),
     ]);
       
+      if (lengthRes.status >= 400) {
+        setError(`Request for text length failed with status code ${lengthRes.status}: ${lengthRes.statusText}`);
+        throw new Error(`Request for text length failed with status code ${lengthRes.status}: ${lengthRes.statusText}`)
+      }
+      if (vowelRes.status >= 400) {
+        setError(`Request for vowel count failed with status code ${vowelRes.status}: ${vowelRes.statusText}`);
+        throw new Error(`Request for vowel count failed with status code ${vowelRes.status}: ${vowelRes.statusText}`)
+      }
+
       const lengthData = await lengthRes.json();
       const vowelData = await vowelRes.json();
-      // console.log(vowelData)
-      // console.log(lengthData)
+
       // Update the state with the fetched data
       setLength(lengthData.length);
       setNumVowels(vowelData.vowel_count); 
 
     } catch (err) {
       // Handle any errors that occur during the fetch
-      console.log('an error occurred while fetching text length and number of vowels: ' , err)
+      console.log('An error occurred while fetching text length and number of vowels: ' , err)
     } finally {
       // Always turn off the loading state when finished
       setIsLoading(false);
